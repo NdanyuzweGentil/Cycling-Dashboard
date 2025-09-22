@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Team Velocity - Cycling Performance Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      /* Header */
+      header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+      }
+
+      .logo {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        list-style: none;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: #2c3e50;
+        font-weight: 500;
+        transition: color 0.3s ease;
+      }
+
+      .nav-links a:hover {
+        color: #3498db;
+      }
+
+      .mobile-menu {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+      }
+
+      .mobile-menu span {
+        width: 25px;
+        height: 3px;
+        background: #2c3e50;
+        margin: 3px 0;
+        transition: 0.3s;
+      }
+
+      /* Hero Section */
+      .hero {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          rgba(52, 152, 219, 0.8),
+          rgba(155, 89, 182, 0.8)
+        );
+        z-index: -1;
+      }
+
+      .hero-content h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .hero-content p {
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+      }
+
+      .cta-button {
+        display: inline-block;
+        background: #e74c3c;
+        color: white;
+        padding: 1rem 2rem;
+        text-decoration: none;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(231, 76, 60, 0.4);
+      }
+
+      /* Main Content */
+      main {
+        background: white;
+        margin-top: -50px;
+        border-radius: 30px 30px 0 0;
+        position: relative;
+        z-index: 10;
+      }
+
+      /* Dashboard Section */
+      .dashboard-section {
+        padding: 4rem 0;
+      }
+
+      .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
+        color: #2c3e50;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .stat-icon {
+        font-size: 3rem;
+        color: #3498db;
+        margin-bottom: 1rem;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        color: #7f8c8d;
+        font-weight: 500;
+      }
+
+      /* Charts Section */
+      .charts-section {
+        padding: 2rem 0;
+      }
+
+      .chart-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
+
+      .chart-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+        text-align: center;
+      }
+
+      /* Time Period Selector */
+      .time-selector {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .time-btn {
+        padding: 0.5rem 1rem;
+        border: 2px solid #3498db;
+        background: transparent;
+        color: #3498db;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .time-btn.active,
+      .time-btn:hover {
+        background: #3498db;
+        color: white;
+      }
+
+      /* Team Roster */
+      .roster-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .rider-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+      }
+
+      .rider-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .rider-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #3498db, #9b59b6);
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+      }
+
+      .rider-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .rider-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .rider-stat {
+        text-align: center;
+      }
+
+      .rider-stat-value {
+        font-weight: 600;
+        color: #3498db;
+      }
+
+      .rider-stat-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+      }
+
+      /* News Section */
+      .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .news-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .news-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .news-image {
+        height: 200px;
+        background: linear-gradient(45deg, #3498db, #9b59b6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+      }
+
+      .news-content {
+        padding: 1.5rem;
+      }
+
+      .news-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .news-date {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+      }
+
+      .news-excerpt {
+        color: #555;
+        line-height: 1.6;
+      }
+
+      /* Footer */
+      footer {
+        background: #2c3e50;
+        color: white;
+        padding: 3rem 0 1rem;
+        margin-top: 4rem;
+      }
+
+      .footer-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .footer-section h3 {
+        margin-bottom: 1rem;
+        color: #3498db;
+      }
+
+      .footer-section a {
+        color: #bdc3c7;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 0.5rem;
+        transition: color 0.3s ease;
+      }
+
+      .footer-section a:hover {
+        color: #3498db;
+      }
+
+      .social-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .social-links a {
+        width: 40px;
+        height: 40px;
+        background: #34495e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: background 0.3s ease;
+      }
+
+      .social-links a:hover {
+        background: #3498db;
+      }
+
+      .footer-bottom {
+        text-align: center;
+        padding-top: 2rem;
+        border-top: 1px solid #34495e;
+        color: #bdc3c7;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+
+        .mobile-menu {
+          display: flex;
+        }
+
+        .hero-content h1 {
+          font-size: 2.5rem;
+        }
+
+        .hero-content p {
+          font-size: 1.1rem;
+        }
+
+        .time-selector {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Loading Animation */
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Data Upload Section */
+      .upload-section {
+        background: #f8f9fa;
+        padding: 3rem 0;
+        margin: 2rem 0;
+        border-radius: 15px;
+      }
+
+      .upload-box {
+        border: 2px dashed #3498db;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .upload-box:hover {
+        background: #f8f9fa;
+        border-color: #2980b9;
+      }
+
+      .upload-icon {
+        font-size: 3rem;
+        color: #3498db;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <nav class="container">
+        <a href="#" class="logo">
+          <i class="fas fa-bicycle"></i> Team Velocity
+        </a>
+        <ul class="nav-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#dashboard">Dashboard</a></li>
+          <li><a href="#roster">Roster</a></li>
+          <li><a href="#results">Results</a></li>
+          <li><a href="#news">News</a></li>
+          <li><a href="#about">About</a></li>
+        </ul>
+        <div class="mobile-menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+      <div class="hero-content">
+        <h1>Riding New Heights</h1>
+        <p>Professional Cycling Performance Dashboard</p>
+        <a href="#dashboard" class="cta-button">View Dashboard</a>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Data Upload Section -->
+      <section class="upload-section">
+        <div class="container">
+          <h2 class="section-title">Upload Your Data</h2>
+          <div
+            class="upload-box"
+            onclick="document.getElementById('fileInput').click()"
+          >
+            <div class="upload-icon">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3>Upload CSV or Excel File</h3>
+            <p>Click here to upload your cycling performance data</p>
+            <input
+              type="file"
+              id="fileInput"
+              accept=".csv,.xlsx,.xls"
+              style="display: none"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="dashboard-section">
+        <div class="container">
+          <h2 class="section-title">Performance Dashboard</h2>
+
+          <!-- Time Period Selector -->
+          <div class="time-selector">
+            <button class="time-btn active" data-period="hour">Hourly</button>
+            <button class="time-btn" data-period="day">Daily</button>
+            <button class="time-btn" data-period="week">Weekly</button>
+            <button class="time-btn" data-period="month">Monthly</button>
+            <button class="time-btn" data-period="quarter">Quarterly</button>
+            <button class="time-btn" data-period="year">Yearly</button>
+          </div>
+
+          <!-- Loading Animation -->
+          <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading performance data...</p>
+          </div>
+
+          <!-- Statistics Cards -->
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-road"></i>
+              </div>
+              <div class="stat-value" id="totalDistance">0 km</div>
+              <div class="stat-label">Total Distance</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="stat-value" id="totalDuration">0 h</div>
+              <div class="stat-label">Total Duration</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-bolt"></i>
+              </div>
+              <div class="stat-value" id="avgPower">0 W</div>
+              <div class="stat-label">Average Power</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-heartbeat"></i>
+              </div>
+              <div class="stat-value" id="avgHeartRate">0 bpm</div>
+              <div class="stat-label">Average Heart Rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-mountain"></i>
+              </div>
+              <div class="stat-value" id="totalElevation">0 m</div>
+              <div class="stat-label">Elevation Gain</div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="charts-section">
+            <div class="chart-container">
+              <h3 class="chart-title">Performance Trends</h3>
+              <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3 class="chart-title">Team Comparison</h3>
+              <canvas id="teamChart"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3 class="chart-title">Individual Performance</h3>
+              <canvas id="individualChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Team Roster Section -->
+      <section id="roster" class="dashboard-section">
+        <div class="container">
+          <h2 class="section-title">Team Roster</h2>
+          <div class="roster-grid" id="rosterGrid">
+            <!-- Roster cards will be populated by JavaScript -->
+          </div>
+        </div>
+      </section>
+
+      <!-- News Section -->
+      <section id="news" class="dashboard-section">
+        <div class="container">
+          <h2 class="section-title">Latest News</h2>
+          <div class="news-grid">
+            <div class="news-card">
+              <div class="news-image">
+                <i class="fas fa-trophy"></i>
+              </div>
+              <div class="news-content">
+                <div class="news-title">
+                  Team Victory at Regional Championship
+                </div>
+                <div class="news-date">March 15, 2025</div>
+                <div class="news-excerpt">
+                  Our team secured first place in the regional cycling
+                  championship with outstanding performances from all riders.
+                </div>
+              </div>
+            </div>
+            <div class="news-card">
+              <div class="news-image">
+                <i class="fas fa-medal"></i>
+              </div>
+              <div class="news-content">
+                <div class="news-title">New Training Program Launched</div>
+                <div class="news-date">March 10, 2025</div>
+                <div class="news-excerpt">
+                  We've introduced a new high-intensity training program to
+                  improve our riders' performance metrics.
+                </div>
+              </div>
+            </div>
+            <div class="news-card">
+              <div class="news-image">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="news-content">
+                <div class="news-title">New Rider Joins Team</div>
+                <div class="news-date">March 5, 2025</div>
+                <div class="news-excerpt">
+                  We're excited to welcome our newest team member who brings
+                  fresh energy and talent to our cycling squad.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>Team Velocity</h3>
+            <p>
+              Professional cycling team dedicated to excellence and performance.
+              Riding new heights in competitive cycling.
+            </p>
+            <div class="social-links">
+              <a href="#"><i class="fab fa-facebook-f"></i></a>
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab fa-youtube"></i></a>
+            </div>
+          </div>
+          <div class="footer-section">
+            <h3>Quick Links</h3>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#roster">Team Roster</a>
+            <a href="#results">Race Results</a>
+            <a href="#news">News & Updates</a>
+          </div>
+          <div class="footer-section">
+            <h3>Performance</h3>
+            <a href="#">Statistics</a>
+            <a href="#">Training Data</a>
+            <a href="#">Race Calendar</a>
+            <a href="#">Achievements</a>
+          </div>
+          <div class="footer-section">
+            <h3>Contact</h3>
+            <p><i class="fas fa-envelope"></i> info@teamvelocity.com</p>
+            <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+            <p>
+              <i class="fas fa-map-marker-alt"></i> Cycling Center, Sports City
+            </p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Team Velocity. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Sample data - this will be replaced with real data from the Flask backend
+      let currentData = {
+        riders: [
+          {
+            name: "Alex Rider",
+            team: "Team A",
+            distance: 125.8,
+            duration: 15.5,
+            power: 220,
+            hr: 148,
+            elevation: 1180,
+          },
+          {
+            name: "Jamie Lee",
+            team: "Team B",
+            distance: 137.5,
+            duration: 16.2,
+            power: 200,
+            hr: 151,
+            elevation: 1550,
+          },
+          {
+            name: "Sam Kim",
+            team: "Team A",
+            distance: 137.3,
+            duration: 17.7,
+            power: 196,
+            hr: 149,
+            elevation: 1530,
+          },
+        ],
+        stats: {
+          totalDistance: 400.6,
+          totalDuration: 49.4,
+          avgPower: 205,
+          avgHeartRate: 149,
+          totalElevation: 4260,
+        },
+      };
+
+      // Initialize charts
+      let performanceChart, teamChart, individualChart;
+
+      // Time period buttons
+      document.querySelectorAll(".time-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          document
+            .querySelectorAll(".time-btn")
+            .forEach((b) => b.classList.remove("active"));
+          this.classList.add("active");
+          updateDashboard(this.dataset.period);
+        });
+      });
+
+      // File upload handler
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (file) {
+            uploadFile(file);
+          }
+        });
+
+      function uploadFile(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("/upload", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            currentData = data;
+            updateDashboard("month");
+            updateStats();
+            updateRoster();
+          })
+          .catch((error) => {
+            console.error("Error uploading file:", error);
+            alert("Error uploading file. Please try again.");
+          });
+      }
+
+      function updateDashboard(period) {
+        document.getElementById("loading").style.display = "block";
+
+        // Simulate API call delay
+        setTimeout(() => {
+          fetch(`/api/data/${period}`)
+            .then((response) => response.json())
+            .then((data) => {
+              updateCharts(data, period);
+              document.getElementById("loading").style.display = "none";
+            })
+            .catch((error) => {
+              console.error("Error fetching data:", error);
+              document.getElementById("loading").style.display = "none";
+            });
+        }, 1000);
+      }
+
+      function updateStats() {
+        const stats = currentData.stats;
+        document.getElementById(
+          "totalDistance"
+        ).textContent = `${stats.totalDistance.toFixed(1)} km`;
+        document.getElementById(
+          "totalDuration"
+        ).textContent = `${stats.totalDuration.toFixed(1)} h`;
+        document.getElementById("avgPower").textContent = `${stats.avgPower} W`;
+        document.getElementById(
+          "avgHeartRate"
+        ).textContent = `${stats.avgHeartRate} bpm`;
+        document.getElementById(
+          "totalElevation"
+        ).textContent = `${stats.totalElevation} m`;
+      }
+
+      function updateRoster() {
+        const rosterGrid = document.getElementById("rosterGrid");
+        rosterGrid.innerHTML = "";
+
+        currentData.riders.forEach((rider) => {
+          const riderCard = document.createElement("div");
+          riderCard.className = "rider-card";
+          riderCard.innerHTML = `
+                    <div class="rider-photo">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="rider-name">${rider.name}</div>
+                    <div style="color: #7f8c8d; margin-bottom: 1rem;">${
+                      rider.team
+                    }</div>
+                    <div class="rider-stats">
+                        <div class="rider-stat">
+                            <div class="rider-stat-value">${rider.distance.toFixed(
+                              1
+                            )} km</div>
+                            <div class="rider-stat-label">Distance</div>
+                        </div>
+                        <div class="rider-stat">
+                            <div class="rider-stat-value">${rider.power} W</div>
+                            <div class="rider-stat-label">Avg Power</div>
+                        </div>
+                        <div class="rider-stat">
+                            <div class="rider-stat-value">${rider.hr} bpm</div>
+                            <div class="rider-stat-label">Avg HR</div>
+                        </div>
+                        <div class="rider-stat">
+                            <div class="rider-stat-value">${
+                              rider.elevation
+                            } m</div>
+                            <div class="rider-stat-label">Elevation</div>
+                        </div>
+                    </div>
+                `;
+          rosterGrid.appendChild(riderCard);
+        });
+      }
+
+      function updateCharts(data, period) {
+        // Performance Chart
+        const performanceCtx = document
+          .getElementById("performanceChart")
+          .getContext("2d");
+        if (performanceChart) performanceChart.destroy();
+
+        performanceChart = new Chart(performanceCtx, {
+          type: "line",
+          data: {
+            labels: data.labels || ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+            datasets: [
+              {
+                label: "Distance (km)",
+                data: data.distance || [32.4, 28.1, 45.2, 22.0, 70.5, 55.0],
+                borderColor: "#3498db",
+                backgroundColor: "rgba(52, 152, 219, 0.1)",
+                tension: 0.4,
+              },
+              {
+                label: "Power (W)",
+                data: data.power || [210, 195, 225, 185, 205, 198],
+                borderColor: "#e74c3c",
+                backgroundColor: "rgba(231, 76, 60, 0.1)",
+                tension: 0.4,
+                yAxisID: "y1",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: `Performance by ${
+                  period.charAt(0).toUpperCase() + period.slice(1)
+                }`,
+              },
+            },
+            scales: {
+              y: {
+                type: "linear",
+                display: true,
+                position: "left",
+              },
+              y1: {
+                type: "linear",
+                display: true,
+                position: "right",
+                grid: {
+                  drawOnChartArea: false,
+                },
+              },
+            },
+          },
+        });
+
+        // Team Chart
+        const teamCtx = document.getElementById("teamChart").getContext("2d");
+        if (teamChart) teamChart.destroy();
+
+        teamChart = new Chart(teamCtx, {
+          type: "bar",
+          data: {
+            labels: data.teams || ["Team A", "Team B"],
+            datasets: [
+              {
+                label: "Average Power (W)",
+                data: data.teamPower || [205, 200],
+                backgroundColor: ["#3498db", "#9b59b6"],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: "Team Performance Comparison",
+              },
+            },
+          },
+        });
+
+        // Individual Chart
+        const individualCtx = document
+          .getElementById("individualChart")
+          .getContext("2d");
+        if (individualChart) individualChart.destroy();
+
+        individualChart = new Chart(individualCtx, {
+          type: "radar",
+          data: {
+            labels: [
+              "Distance",
+              "Power",
+              "Heart Rate",
+              "Elevation",
+              "Duration",
+            ],
+            datasets: currentData.riders.map((rider, index) => ({
+              label: rider.name,
+              data: [
+                (rider.distance / 150) * 100,
+                (rider.power / 250) * 100,
+                (rider.hr / 180) * 100,
+                (rider.elevation / 2000) * 100,
+                (rider.duration / 20) * 100,
+              ],
+              borderColor: ["#3498db", "#e74c3c", "#2ecc71"][index],
+              backgroundColor: [
+                "rgba(52, 152, 219, 0.2)",
+                "rgba(231, 76, 60, 0.2)",
+                "rgba(46, 204, 113, 0.2)",
+              ][index],
+            })),
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: "Individual Performance Comparison",
+              },
+            },
+            scales: {
+              r: {
+                beginAtZero: true,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+
+      // Initialize dashboard on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        updateStats();
+        updateRoster();
+        updateDashboard("month");
+      });
+
+      // Smooth scrolling for navigation links
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Race Results - Team Velocity</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      /* Header */
+      header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+      }
+
+      .logo {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        list-style: none;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: #2c3e50;
+        font-weight: 500;
+        transition: color 0.3s ease;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color: #3498db;
+      }
+
+      /* Main Content */
+      main {
+        background: white;
+        margin-top: 80px;
+        border-radius: 30px 30px 0 0;
+        position: relative;
+        z-index: 10;
+        padding: 2rem 0;
+      }
+
+      .page-header {
+        text-align: center;
+        padding: 3rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-bottom: 3rem;
+      }
+
+      .page-header h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .page-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
+      /* Podium Section */
+      .podium-section {
+        padding: 3rem 0;
+        background: #f8f9fa;
+      }
+
+      .podium-container {
+        display: flex;
+        justify-content: center;
+        align-items: end;
+        gap: 2rem;
+        margin: 3rem 0;
+        flex-wrap: wrap;
+      }
+
+      .podium-place {
+        text-align: center;
+        position: relative;
+      }
+
+      .podium {
+        width: 120px;
+        height: 80px;
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 1rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .podium.second {
+        height: 100px;
+        background: linear-gradient(45deg, #c0c0c0, #e8e8e8);
+      }
+
+      .podium.first {
+        height: 120px;
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+      }
+
+      .podium.third {
+        height: 60px;
+        background: linear-gradient(45deg, #cd7f32, #daa520);
+      }
+
+      .rider-info {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        min-width: 200px;
+      }
+
+      .rider-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #3498db, #9b59b6);
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+      }
+
+      .rider-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .rider-team {
+        color: #7f8c8d;
+        margin-bottom: 1rem;
+      }
+
+      .race-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-weight: 600;
+        color: #3498db;
+      }
+
+      .stat-label {
+        color: #7f8c8d;
+        font-size: 0.8rem;
+      }
+
+      /* Results Table */
+      .results-section {
+        padding: 3rem 0;
+      }
+
+      .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
+        color: #2c3e50;
+      }
+
+      .results-table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+      }
+
+      .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+
+      .results-table th,
+      .results-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #ecf0f1;
+      }
+
+      .results-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .results-table tr:hover {
+        background: #f8f9fa;
+      }
+
+      .position {
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+
+      .position.first {
+        color: #ffd700;
+      }
+
+      .position.second {
+        color: #c0c0c0;
+      }
+
+      .position.third {
+        color: #cd7f32;
+      }
+
+      /* Race Calendar */
+      .calendar-section {
+        padding: 3rem 0;
+        background: #f8f9fa;
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .race-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .race-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .race-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .race-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .race-date {
+        background: #3498db;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+      }
+
+      .race-location {
+        color: #7f8c8d;
+        margin-bottom: 1rem;
+      }
+
+      .race-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .detail-item {
+        text-align: center;
+      }
+
+      .detail-value {
+        font-weight: 600;
+        color: #3498db;
+      }
+
+      .detail-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+      }
+
+      /* Stats Section */
+      .stats-section {
+        padding: 3rem 0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .stat-icon {
+        font-size: 3rem;
+        color: #3498db;
+        margin-bottom: 1rem;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        color: #7f8c8d;
+        font-weight: 500;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .nav-links {
+          display: none;
+        }
+
+        .page-header h1 {
+          font-size: 2rem;
+        }
+
+        .podium-container {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .podium {
+          width: 100px;
+        }
+
+        .results-table-container {
+          padding: 1rem;
+        }
+
+        .results-table th,
+        .results-table td {
+          padding: 0.5rem;
+          font-size: 0.9rem;
+        }
+
+        .calendar-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <nav class="container">
+        <a href="/" class="logo">
+          <i class="fas fa-bicycle"></i> Team Velocity
+        </a>
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/#dashboard">Dashboard</a></li>
+          <li><a href="/#roster">Roster</a></li>
+          <li><a href="/results" class="active">Results</a></li>
+          <li><a href="/#news">News</a></li>
+          <li><a href="/#about">About</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="container">
+          <h1>Race Results</h1>
+          <p>Championship victories and podium finishes</p>
+        </div>
+      </div>
+
+      <!-- Podium Section -->
+      <section class="podium-section">
+        <div class="container">
+          <h2 class="section-title">Latest Race Podium</h2>
+          <div class="podium-container">
+            <div class="podium-place">
+              <div class="podium second">
+                <i class="fas fa-medal"></i>
+              </div>
+              <div class="rider-info" id="secondPlace">
+                <div class="rider-photo">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="rider-name">Loading...</div>
+                <div class="rider-team">Team</div>
+                <div class="race-stats">
+                  <div class="stat-item">
+                    <div class="stat-value">--:--</div>
+                    <div class="stat-label">Time</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">-- W</div>
+                    <div class="stat-label">Avg Power</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="podium-place">
+              <div class="podium first">
+                <i class="fas fa-trophy"></i>
+              </div>
+              <div class="rider-info" id="firstPlace">
+                <div class="rider-photo">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="rider-name">Loading...</div>
+                <div class="rider-team">Team</div>
+                <div class="race-stats">
+                  <div class="stat-item">
+                    <div class="stat-value">--:--</div>
+                    <div class="stat-label">Time</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">-- W</div>
+                    <div class="stat-label">Avg Power</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="podium-place">
+              <div class="podium third">
+                <i class="fas fa-medal"></i>
+              </div>
+              <div class="rider-info" id="thirdPlace">
+                <div class="rider-photo">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="rider-team">Team</div>
+                <div class="race-stats">
+                  <div class="stat-item">
+                    <div class="stat-value">--:--</div>
+                    <div class="stat-label">Time</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">-- W</div>
+                    <div class="stat-label">Avg Power</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Table -->
+      <section class="results-section">
+        <div class="container">
+          <h2 class="section-title">Complete Results</h2>
+          <div class="results-table-container">
+            <table class="results-table" id="resultsTable">
+              <thead>
+                <tr>
+                  <th>Position</th>
+                  <th>Rider</th>
+                  <th>Team</th>
+                  <th>Time</th>
+                  <th>Distance</th>
+                  <th>Avg Power</th>
+                  <th>Avg Speed</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Results will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Race Calendar -->
+      <section class="calendar-section">
+        <div class="container">
+          <h2 class="section-title">Upcoming Races</h2>
+          <div class="calendar-grid" id="calendarGrid">
+            <!-- Race cards will be populated by JavaScript -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Season Stats -->
+      <section class="stats-section">
+        <div class="container">
+          <h2 class="section-title">Season Statistics</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-trophy"></i>
+              </div>
+              <div class="stat-value" id="totalWins">0</div>
+              <div class="stat-label">Total Wins</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-medal"></i>
+              </div>
+              <div class="stat-value" id="totalPodiums">0</div>
+              <div class="stat-label">Podium Finishes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-road"></i>
+              </div>
+              <div class="stat-value" id="totalRaces">0</div>
+              <div class="stat-label">Races Completed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="stat-value" id="avgPosition">0</div>
+              <div class="stat-label">Average Position</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Sample race data
+      const raceData = {
+        podium: [
+          {
+            position: 1,
+            name: "Alex Rider",
+            team: "Team Velocity",
+            time: "2:15:42",
+            power: 245,
+            distance: 120.5,
+            speed: 53.2,
+          },
+          {
+            position: 2,
+            name: "Jamie Lee",
+            team: "Team Velocity",
+            time: "2:16:18",
+            power: 238,
+            distance: 120.5,
+            speed: 52.8,
+          },
+          {
+            position: 3,
+            name: "Sam Kim",
+            team: "Team Velocity",
+            time: "2:17:05",
+            power: 232,
+            distance: 120.5,
+            speed: 52.3,
+          },
+        ],
+        results: [
+          {
+            position: 1,
+            name: "Alex Rider",
+            team: "Team Velocity",
+            time: "2:15:42",
+            power: 245,
+            distance: 120.5,
+            speed: 53.2,
+          },
+          {
+            position: 2,
+            name: "Jamie Lee",
+            team: "Team Velocity",
+            time: "2:16:18",
+            power: 238,
+            distance: 120.5,
+            speed: 52.8,
+          },
+          {
+            position: 3,
+            name: "Sam Kim",
+            team: "Team Velocity",
+            time: "2:17:05",
+            power: 232,
+            distance: 120.5,
+            speed: 52.3,
+          },
+          {
+            position: 4,
+            name: "Mike Johnson",
+            team: "Racing Elite",
+            time: "2:18:12",
+            power: 225,
+            distance: 120.5,
+            speed: 51.9,
+          },
+          {
+            position: 5,
+            name: "Sarah Wilson",
+            team: "Speed Demons",
+            time: "2:19:33",
+            power: 218,
+            distance: 120.5,
+            speed: 51.4,
+          },
+          {
+            position: 6,
+            name: "David Chen",
+            team: "Team Velocity",
+            time: "2:20:45",
+            power: 212,
+            distance: 120.5,
+            speed: 50.8,
+          },
+          {
+            position: 7,
+            name: "Emma Brown",
+            team: "Racing Elite",
+            time: "2:21:22",
+            power: 208,
+            distance: 120.5,
+            speed: 50.5,
+          },
+          {
+            position: 8,
+            name: "Tom Davis",
+            team: "Speed Demons",
+            time: "2:22:18",
+            power: 205,
+            distance: 120.5,
+            speed: 50.1,
+          },
+        ],
+        upcomingRaces: [
+          {
+            title: "Mountain Championship",
+            date: "2025-04-15",
+            location: "Alpine Pass, Switzerland",
+            distance: 150,
+            elevation: 2500,
+            type: "Mountain",
+          },
+          {
+            title: "Time Trial Series",
+            date: "2025-04-22",
+            location: "Velodrome Center",
+            distance: 40,
+            elevation: 50,
+            type: "Time Trial",
+          },
+          {
+            title: "Spring Classic",
+            date: "2025-05-05",
+            location: "Countryside Circuit",
+            distance: 200,
+            elevation: 1200,
+            type: "Classic",
+          },
+        ],
+        seasonStats: {
+          totalWins: 8,
+          totalPodiums: 23,
+          totalRaces: 35,
+          avgPosition: 4.2,
+        },
+      };
+
+      function updatePodium() {
+        const first = document.getElementById("firstPlace");
+        const second = document.getElementById("secondPlace");
+        const third = document.getElementById("thirdPlace");
+
+        const firstRider = raceData.podium[0];
+        const secondRider = raceData.podium[1];
+        const thirdRider = raceData.podium[2];
+
+        first.querySelector(".rider-name").textContent = firstRider.name;
+        first.querySelector(".rider-team").textContent = firstRider.team;
+        first.querySelectorAll(".stat-value")[0].textContent = firstRider.time;
+        first.querySelectorAll(".stat-value")[1].textContent =
+          firstRider.power + " W";
+
+        second.querySelector(".rider-name").textContent = secondRider.name;
+        second.querySelector(".rider-team").textContent = secondRider.team;
+        second.querySelectorAll(".stat-value")[0].textContent =
+          secondRider.time;
+        second.querySelectorAll(".stat-value")[1].textContent =
+          secondRider.power + " W";
+
+        third.querySelector(".rider-name").textContent = thirdRider.name;
+        third.querySelector(".rider-team").textContent = thirdRider.team;
+        third.querySelectorAll(".stat-value")[0].textContent = thirdRider.time;
+        third.querySelectorAll(".stat-value")[1].textContent =
+          thirdRider.power + " W";
+      }
+
+      function updateResultsTable() {
+        const tbody = document.querySelector("#resultsTable tbody");
+        tbody.innerHTML = "";
+
+        raceData.results.forEach((rider) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td class="position ${
+                      rider.position <= 3
+                        ? ["first", "second", "third"][rider.position - 1]
+                        : ""
+                    }">
+                        ${rider.position}
+                    </td>
+                    <td>${rider.name}</td>
+                    <td>${rider.team}</td>
+                    <td>${rider.time}</td>
+                    <td>${rider.distance} km</td>
+                    <td>${rider.power} W</td>
+                    <td>${rider.speed} km/h</td>
+                `;
+          tbody.appendChild(row);
+        });
+      }
+
+      function updateCalendar() {
+        const calendarGrid = document.getElementById("calendarGrid");
+        calendarGrid.innerHTML = "";
+
+        raceData.upcomingRaces.forEach((race) => {
+          const raceCard = document.createElement("div");
+          raceCard.className = "race-card";
+          raceCard.innerHTML = `
+                    <div class="race-header">
+                        <div class="race-title">${race.title}</div>
+                        <div class="race-date">${new Date(
+                          race.date
+                        ).toLocaleDateString()}</div>
+                    </div>
+                    <div class="race-location">
+                        <i class="fas fa-map-marker-alt"></i> ${race.location}
+                    </div>
+                    <div class="race-details">
+                        <div class="detail-item">
+                            <div class="detail-value">${race.distance} km</div>
+                            <div class="detail-label">Distance</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${race.elevation} m</div>
+                            <div class="detail-label">Elevation</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${race.type}</div>
+                            <div class="detail-label">Type</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">TBD</div>
+                            <div class="detail-label">Status</div>
+                        </div>
+                    </div>
+                `;
+          calendarGrid.appendChild(raceCard);
+        });
+      }
+
+      function updateSeasonStats() {
+        document.getElementById("totalWins").textContent =
+          raceData.seasonStats.totalWins;
+        document.getElementById("totalPodiums").textContent =
+          raceData.seasonStats.totalPodiums;
+        document.getElementById("totalRaces").textContent =
+          raceData.seasonStats.totalRaces;
+        document.getElementById("avgPosition").textContent =
+          raceData.seasonStats.avgPosition;
+      }
+
+      // Initialize page
+      document.addEventListener("DOMContentLoaded", function () {
+        updatePodium();
+        updateResultsTable();
+        updateCalendar();
+        updateSeasonStats();
+      });
+
+      // Smooth scrolling for navigation links
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
